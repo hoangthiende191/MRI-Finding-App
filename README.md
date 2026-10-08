@@ -36,10 +36,6 @@ USER=root
 PASSWORD=your_password
 DATABASE_NAME=mri_radiology_db
 
-APP_HOST=127.0.0.1
-APP_PORT=5000
-
-FORCE_ETL=0
 ```
 
 Replace `USER` and `PASSWORD` with your MySQL credentials.
