@@ -48,6 +48,7 @@ Make sure the dataset is placed in the following structure:
 Data Raw/
 ├── Radiologists Report.xlsx
 └── 01_MRI_Data/
+               └──0001/
 ```
 
 ### 5. Start the project
