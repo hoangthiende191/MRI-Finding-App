@@ -218,5 +218,13 @@ def image(image_id):
     return send_file(io.BytesIO(png_bytes), mimetype="image/png")
 
 
+def start_app():
+    app.run(
+        host=os.getenv("APP_HOST", "127.0.0.1"),
+        port=int(os.getenv("APP_PORT", 5000)),
+        debug=False
+    )
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("APP_PORT", "5000")), debug=True)
+    start_app()

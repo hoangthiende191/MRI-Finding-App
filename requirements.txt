@@ -1,0 +1,8 @@
+Flask
+mysql-connector-python
+python-dotenv
+pandas
+openpyxl
+pydicom
+numpy
+Pillow

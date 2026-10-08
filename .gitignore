@@ -1,5 +1,5 @@
 01_MRI_Data/
 Radiologists Report.xlsx
-01_Database_ETL/etl/__pycache__/
+01_Database/__pycache__/
 02_Application/_pycache_/
-02_Application/.venv/
+.venv

@@ -1,5 +1,5 @@
 
-USE mri_radiology_db
+USE mri_radiology_db;
 DELIMITER //
 
 CREATE PROCEDURE get_patient_mri(
