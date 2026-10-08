@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Application 1 — Patient MRI & Report</h1>
+<p class="muted">Retrieve the radiology report and all MRI images for a patient ID.</p>
+
+<form class="search-form" method="get">
+    <label>Patient ID</label>
+    <input name="patient_id" value="{{ patient_id }}" placeholder="e.g. 0001" required>
+    <button type="submit">Search</button>
+</form>
+
+{% if data %}
+<section class="panel">
+    <h2>Patient {{ data.patient.patient_id }}</h2>
+    <h3>Radiology Report</h3>
+    <div class="report">{{ data.patient.clinician_notes or 'No report available.' }}</div>
+</section>
+
+<section class="panel">
+    <div class="section-title">
+        <h2>MRI Images</h2>
+        <span>{{ data.images|length }} image(s)</span>
+    </div>
+
+    {% if data.images %}
+        <div class="image-grid">
+        {% for row in data.images %}
+            <article class="image-card">
+                <a href="{{ url_for('image', image_id=row.image_id) }}" target="_blank">
+                    <img src="{{ url_for('image', image_id=row.image_id) }}" loading="lazy" alt="MRI {{ row.image_id }}">
+                </a>
+                <div class="image-info">
+                    <strong>Image {{ row.image_id }}</strong>
+                    <span>{{ row.sequence_type or 'N/A' }} / {{ row.orientation or 'N/A' }}</span>
+                    <small>{{ row.series_name }}</small>
+                </div>
+            </article>
+        {% endfor %}
+        </div>
+    {% else %}
+        <p>No MRI images found for this patient.</p>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

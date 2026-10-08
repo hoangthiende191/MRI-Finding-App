@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Application 3 — Similar MRI Search</h1>
+
+<p class="muted">
+    Enter a patient ID, select one MRI image, and find similar MRI images.
+</p>
+
+
+<!-- =========================================================
+     STEP 1 — PATIENT ID
+     ========================================================= -->
+
+<form class="search-form" method="get">
+
+    <label>Patient ID</label>
+
+    <input
+        name="patient_id"
+        value="{{ patient_id or '' }}"
+        type="text"
+        placeholder="e.g. 0001"
+        required
+    >
+
+    <button type="submit">
+        Find MRI Images
+    </button>
+
+</form>
+
+
+<!-- =========================================================
+     STEP 2 — SELECT MRI
+     ========================================================= -->
+
+{% if patient_data %}
+
+<section class="panel">
+
+    <h2>
+        MRI Images for Patient {{ patient_data.patient.patient_id }}
+    </h2>
+
+    {% if patient_data.images %}
+
+    <form class="search-form" method="get">
+
+        <input
+            type="hidden"
+            name="patient_id"
+            value="{{ patient_id }}"
+        >
+
+        <label>Select MRI Image</label>
+
+        <select name="image_id" required>
+
+            <option value="">
+                -- Select an MRI image --
+            </option>
+
+            {% for image in patient_data.images %}
+
+            <option
+                value="{{ image.image_id }}"
+                {% if selected_image_id == image.image_id %}
+                    selected
+                {% endif %}
+            >
+
+                Image {{ image.image_id }}
+                —
+                {{ image.sequence_type or 'N/A' }}
+                /
+                {{ image.orientation or 'N/A' }}
+                —
+                {{ image.series_name }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button type="submit">
+            Find Similar Images
+        </button>
+
+    </form>
+
+    {% else %}
+
+    <p>No MRI images found for this patient.</p>
+
+    {% endif %}
+
+</section>
+
+{% endif %}
+
+
+<!-- =========================================================
+     SELECTED MRI
+     ========================================================= -->
+
+{% if selected %}
+
+<div class="similar-layout">
+
+    <section class="panel selected-panel">
+
+        <h2>Selected MRI</h2>
+
+        <img
+            class="selected-image"
+            src="{{ url_for(
+                'image',
+                image_id=selected.image_id
+            ) }}"
+            alt="Selected MRI"
+        >
+
+        <div class="metadata">
+
+            <strong>
+                Image {{ selected.image_id }}
+            </strong>
+
+            <span>
+                Patient: {{ selected.patient_id }}
+            </span>
+
+            <span>
+                Sequence:
+                {{ selected.sequence_type or 'N/A' }}
+            </span>
+
+            <span>
+                Orientation:
+                {{ selected.orientation or 'N/A' }}
+            </span>
+
+            <span>
+                Series:
+                {{ selected.series_name }}
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SIMILAR IMAGES
+         ===================================================== -->
+
+    <section class="panel">
+
+        <div class="section-title">
+
+            <h2>Similar Images</h2>
+
+            <span>
+                Top {{ results|length }}
+            </span>
+
+        </div>
+
+
+        {% if results %}
+
+        <div class="image-grid">
+
+            {% for row in results %}
+
+            <article class="image-card">
+
+                <a
+                    href="{{ url_for(
+                        'image',
+                        image_id=row.image_id
+                    ) }}"
+                    target="_blank"
+                >
+
+                    <img
+                        src="{{ url_for(
+                            'image',
+                            image_id=row.image_id
+                        ) }}"
+                        loading="lazy"
+                        alt="Similar MRI {{ row.image_id }}"
+                    >
+
+                </a>
+
+
+                <div class="image-info">
+
+                    <strong>
+                        {{ row.similarity }}% similarity
+                    </strong>
+
+                    <span>
+                        Image {{ row.image_id }}
+                    </span>
+
+                    <span>
+                        {{ row.sequence_type or 'N/A' }}
+                        /
+                        {{ row.orientation or 'N/A' }}
+                    </span>
+
+                    <small>
+                        Patient {{ row.patient_id }}
+                    </small>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <p>
+            No comparable images could be processed.
+        </p>
+
+        {% endif %}
+
+    </section>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

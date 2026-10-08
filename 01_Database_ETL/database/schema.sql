@@ -178,7 +178,18 @@ CREATE TABLE mri_image (
         ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE image_feature (
+    image_id        INT NOT NULL,
+    feature_vector  JSON NOT NULL,
 
+    CONSTRAINT pk_image_feature
+        PRIMARY KEY (image_id),
+
+    CONSTRAINT fk_feature_image
+        FOREIGN KEY (image_id)
+        REFERENCES mri_image(image_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
 -- =====================================================================
 -- INDEXES
 --

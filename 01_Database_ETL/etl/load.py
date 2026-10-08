@@ -9,7 +9,8 @@ The database schema must be created before executing this module.
 
 import mysql.connector
 from mysql.connector import Error
-
+import json
+from vector_create import create_image_feature
 
 def get_connection(
     host,
@@ -222,6 +223,18 @@ def load_mri_data(
                 record["file_path"]
             )
         )
-
+        cursor.execute("""
+            SELECT image_id
+            FROM mri_image
+            WHERE file_path = %s
+            """, (record["file_path"],))
+        image_id = cursor.fetchone()[0]
+        feature_vector = create_image_feature(record["file_path"])
+        cursor.execute("""
+            INSERT INTO image_feature (image_id,feature_vector)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE
+        feature_vector = VALUES(feature_vector)
+        """, (image_id,json.dumps(feature_vector)))
     conn.commit()
     cursor.close()

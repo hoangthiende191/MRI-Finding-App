@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+    <h1>MRI Radiology Database System</h1>
+    <p>Three database applications for patient, condition-based MRI retrieval, and similar-image search.</p>
+</section>
+
+<div class="cards three">
+    <a class="card" href="{{ url_for('application_1') }}">
+        <span class="number">1</span>
+        <h2>Patient Search</h2>
+        <p>Retrieve the radiology report and MRI images for a patient ID.</p>
+    </a>
+    <a class="card" href="{{ url_for('application_2') }}">
+        <span class="number">2</span>
+        <h2>Conditional Search</h2>
+        <p>Filter MRI images using patient ID, sequence type, and orientation.</p>
+    </a>
+    <a class="card" href="{{ url_for('application_3') }}">
+        <span class="number">3</span>
+        <h2>Similar MRI Search</h2>
+        <p>Select one MRI image and retrieve visually similar images.</p>
+    </a>
+</div>
+
+<section class="note">
+    <strong>Architecture:</strong> MySQL stores MRI metadata and file paths. Flask reads the .ima/DICOM files and returns PNG previews to the browser. The original MRI files remain outside the database.
+</section>
+{% endblock %}

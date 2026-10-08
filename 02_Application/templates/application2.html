@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Application 2 — Conditional MRI Search</h1>
+<p class="muted">Retrieve MRI images using a patient ID and imaging conditions.</p>
+
+<form class="search-form advanced" method="get">
+    <div>
+        <label>Patient ID</label>
+        <input name="patient_id" value="{{ patient_id }}" placeholder="e.g. 0001" required>
+    </div>
+    <div>
+        <label>Sequence Type</label>
+        <select name="sequence_type">
+            <option value="">Any</option>
+            <option value="T1" {% if sequence_type == 'T1' %}selected{% endif %}>T1</option>
+            <option value="T2" {% if sequence_type == 'T2' %}selected{% endif %}>T2</option>
+        </select>
+    </div>
+    <div>
+        <label>Orientation</label>
+        <select name="orientation">
+            <option value="">Any</option>
+            <option value="SAG" {% if orientation == 'SAG' %}selected{% endif %}>SAG</option>
+            <option value="TRA" {% if orientation == 'TRA' %}selected{% endif %}>TRA</option>
+            <option value="COR" {% if orientation == 'COR' %}selected{% endif %}>COR</option>
+        </select>
+    </div>
+    <button type="submit">Search</button>
+</form>
+
+{% if patient_id %}
+<section class="panel">
+    {% if rows %}   
+    <div class="report-content">
+        <h3>Radiology Report</h3>
+        <p>
+        {{ rows[0].clinician_notes or "No radiology report available." }}
+        </p>
+    </div>
+    {% endif %}
+    <div class="section-title">
+        <h2>Results</h2>
+        <span>{{ rows|length }} image(s)</span>
+    </div>
+    {% if rows %}
+    <div class="image-grid">
+        {% for row in rows %}
+        <article class="image-card">
+            <a href="{{ url_for('image', image_id=row.image_id) }}" target="_blank">
+                <img src="{{ url_for('image', image_id=row.image_id) }}" loading="lazy" alt="MRI {{ row.image_id }}">
+            </a>
+            <div class="image-info">
+                <strong>Image {{ row.image_id }}</strong>
+                <span>{{ row.sequence_type or 'N/A' }} / {{ row.orientation or 'N/A' }}</span>
+                <small>{{ row.series_name }}</small>
+                <small>{{ row.study_name }}</small>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}
