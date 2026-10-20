@@ -1,5 +1,4 @@
-#Phase 4.4 - Concurrency Control
-
+# Phase 4.4 - Concurrency Control
 import time
 import threading
 import mysql.connector
@@ -9,55 +8,28 @@ DB_CONFIG = {
     'host': 'localhost',
     'port': 3306,
     'user': 'root',
-    'password': 'your_password_here',  # <-- Enter your MySQL root password 
+    'password': 'your_password_here', #<- Enter Password of MySQL 
     'database': 'mri_radiology_db'
 }
 
 def setup_database():
-    """Initializes target database, tables, and sample baseline data."""
+    """Resets target record for patient '0001' to baseline before running concurrency tests."""
     print("=" * 65)
-    print("[SETUP] Verifying and initializing sample test environment...")
-    conn = mysql.connector.connect(
-        host=DB_CONFIG['host'],
-        port=DB_CONFIG['port'],
-        user=DB_CONFIG['user'],
-        password=DB_CONFIG['password']
-    )
+    print("[SETUP] Resetting baseline test data for patient 0001...")
+    conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
-    cursor.execute("CREATE DATABASE IF NOT EXISTS mri_radiology_db CHARACTER SET utf8mb4;")
-    cursor.execute("USE mri_radiology_db;")
     
-    # Create patient table
+    # Chỉ reset dữ liệu kiểm thử, không tạo lại bảng
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS patient (
-            patient_id VARCHAR(10) NOT NULL PRIMARY KEY
-        ) ENGINE=InnoDB;
-    """)
-    cursor.execute("INSERT IGNORE INTO patient (patient_id) VALUES ('0001');")
-    
-    # Create radiology_report table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS radiology_report (
-            report_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-            patient_id VARCHAR(10) NOT NULL UNIQUE,
-            clinician_notes TEXT NULL,
-            CONSTRAINT fk_rep_pat FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE
-        ) ENGINE=InnoDB;
-    """)
-    
-    cursor.execute("""
-        INSERT INTO radiology_report (patient_id, clinician_notes)
-        VALUES ('0001', 'INITIAL: Patient presenting with mild L4-L5 lumbar disc degeneration.')
-        ON DUPLICATE KEY UPDATE 
-            clinician_notes = 'INITIAL: Patient presenting with mild L4-L5 lumbar disc degeneration.';
+        UPDATE radiology_report 
+        SET clinician_notes = 'INITIAL: Patient presenting with mild L4-L5 lumbar disc degeneration.'
+        WHERE patient_id = '0001';
     """)
     conn.commit()
     cursor.close()
     conn.close()
     print("[SETUP] Baseline data prepared successfully for patient 0001.")
     print("=" * 65)
-
-
 def test_scenario_commit():
     """SCENARIO 1: Session A -> UPDATE -> holds lock -> Session B UPDATE (blocks) -> A COMMIT -> B succeeds."""
     print("\n" + "=" * 65)

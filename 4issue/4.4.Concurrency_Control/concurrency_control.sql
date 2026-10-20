@@ -1,37 +1,6 @@
 -- Phase 4.4: Concurrency Control
 -- Target Table: radiology_report (columns: patient_id, clinician_notes)
 
--- PART 0: Initial Data setup
-USE mri_radiology_db;
-
--- 1. Verify MySQL transaction isolation level/lockwait
-SELECT @@transaction_isolation AS default_isolation_level,
-       @@innodb_lock_wait_timeout AS lock_wait_timeout_seconds;
-
--- 2. create table 'patient' and 'radiology_report' if not exist
-CREATE TABLE IF NOT EXISTS patient (
-    patient_id VARCHAR(10) NOT NULL PRIMARY KEY
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS radiology_report (
-    report_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    patient_id VARCHAR(10) NOT NULL UNIQUE,
-    clinician_notes TEXT NULL,
-    CONSTRAINT fk_report_patient 
-        FOREIGN KEY (patient_id) REFERENCES patient(patient_id) 
-        ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- 3. sample patient record
-INSERT IGNORE INTO patient (patient_id) VALUES ('0001');
-
--- 4. Initialize / Reset baseline report record for patient '0001'
-INSERT INTO radiology_report (patient_id, clinician_notes)
-VALUES ('0001', 'INITIAL: Patient presenting with mild L4-L5 lumbar disc degeneration.')
-ON DUPLICATE KEY UPDATE 
-    clinician_notes = 'INITIAL: Patient presenting with mild L4-L5 lumbar disc degeneration.';
-SELECT * FROM radiology_report WHERE patient_id = '0001';
-
 -- SCENARIO 1: SESSION A & SESSION B (LOCK CONTENTION & COMMIT SEQUENCE)
 -- Description: Two clinicians simultaneously update the report for patient 0001.
 
@@ -63,6 +32,7 @@ WHERE patient_id = '0001';
 
 
 -- [CASE 2: COMMIT & SERIALIZED RELEASE TEST]
+-- Note: after done Case1, update and do Step 1,2 again
 -- STEP3: commit in session A, release lock
 COMMIT;
 
