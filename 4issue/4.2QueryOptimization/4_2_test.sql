@@ -16,7 +16,7 @@
 --   Q1 get_patient_mri       Q2 search_patient_mri     Q3 get_image_record
 --   Q4 get_similarity_candidates                       Q5 image_feature lookup
 -- States: A = no index (helper copy mri_42_noindex)
---         B = real schema with the Phase 4.1 indexes (mri_radiology_db)
+--         B = real schema with the indexes of schema.sql (mri_radiology_db)
 -- =====================================================================
 
 -- =====================================================================
@@ -84,7 +84,7 @@ LEFT JOIN mri_image i         ON se.series_id = i.series_id
 WHERE p.patient_id = @pid
 ORDER BY s.study_date, se.series_id, i.image_id;
 
--- State B (Phase 4.1 indexes)
+-- State B (schema.sql indexes)
 USE mri_radiology_db;
 EXPLAIN ANALYZE
 SELECT p.patient_id, rr.report_id, rr.clinician_notes,
@@ -141,7 +141,7 @@ WHERE p.patient_id = @pid
   AND se.orientation   = @ori
 ORDER BY s.study_date, se.series_id, i.image_id;
 
--- State B (Phase 4.1 indexes)
+-- State B (schema.sql indexes)
 USE mri_radiology_db;
 EXPLAIN ANALYZE
 SELECT p.patient_id, rr.report_id, rr.clinician_notes,
@@ -188,7 +188,7 @@ JOIN series se ON se.series_id = i.series_id
 JOIN study s   ON s.study_id   = se.study_id
 WHERE i.image_id = @img;
 
--- State B (Phase 4.1 indexes)
+-- State B (schema.sql indexes)
 USE mri_radiology_db;
 EXPLAIN ANALYZE
 SELECT i.image_id, i.file_name, i.file_path,
@@ -216,7 +216,7 @@ WHERE i.image_id <> @img
   AND (@ori IS NULL OR se.orientation   = @ori)
 LIMIT 50;
 
--- State B (Phase 4.1 indexes)
+-- State B (schema.sql indexes)
 USE mri_radiology_db;
 EXPLAIN ANALYZE
 SELECT i.image_id, i.file_name, i.file_path,

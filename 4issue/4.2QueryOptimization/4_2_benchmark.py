@@ -3,7 +3,7 @@ Phase 4.2 - Query Processing & Optimization : TEST (benchmark)
 
 One command measures every application query (Q1-Q5) in two states:
     A_no_index : copy of the data in mri_42_noindex, no keys / no indexes
-    B_indexed  : the real schema (mri_radiology_db) with the Phase 4.1 indexes
+    B_indexed  : the real schema (mri_radiology_db) with the schema.sql indexes
 and, for Q1, Q2 and Q4, both the ORIGINAL query and the REWRITTEN query
 (the SELECT bodies of get_*_opt in 4_2_setup.sql).
 

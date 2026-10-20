@@ -14,10 +14,10 @@
 --   Q5  SELECT ... FROM image_feature WHERE image_id IN (...)    (App 2)
 --
 -- What this file changes
---   * Indexes : none added. The six indexes of Phase 4.1 (idx_study_patient,
---     idx_study_date, idx_series_study, idx_series_sequence_type,
---     idx_series_orientation, idx_image_series) already cover every join and
---     filter of Q1-Q5; 4_2_test.sql proves this with EXPLAIN ANALYZE.
+--   * Indexes : none added. The primary/unique keys and the indexes created by
+--     schema.sql (idx_study_patient, idx_study_date, idx_series_study,
+--     idx_series_sequence_type, idx_series_orientation, idx_image_series)
+--     already cover every join and filter of Q1-Q5; 4_2_test.sql proves this with EXPLAIN ANALYZE.
 --     Adding more would only be a redundant index (extra write cost).
 --   * Rewritten queries : get_patient_mri_opt and search_patient_mri_opt
 --     (below). The original procedures are left untouched so before/after
