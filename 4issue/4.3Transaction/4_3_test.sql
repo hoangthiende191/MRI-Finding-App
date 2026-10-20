@@ -1,10 +1,21 @@
 -- =====================================================================
--- MRI Radiology Database — Phase 4.3: Transactions
-
--- Scenario A: register a new patient together with their radiology report
---             (INSERT patient + INSERT radiology_report)
--- Scenario B: amend a radiology report and correct its study date
---             (UPDATE radiology_report + UPDATE study)
+-- MRI Radiology Database — Phase 4.3: Transactions (TEST)
+--
+-- Test cases for the two transaction scenarios:
+--   Scenario A: register a new patient together with their radiology report
+--               (INSERT patient + INSERT radiology_report)
+--   Scenario B: amend a radiology report and correct its study date
+--               (UPDATE radiology_report + UPDATE study)
+--
+-- Run 4_3_setup.sql first: it creates the procedures used in A4 and B4.
+--
+-- HOW TO RUN (MySQL Workbench)
+--   Run one statement at a time with Ctrl+Enter, top to bottom, or run
+--   everything with "continue on SQL script error" switched on.
+--   Exactly 5 statements fail on purpose (marked "-- EXPECTED ERROR"):
+--   1452, 1406, 3819, 1292, 1644.
+--   Test patients use IDs 0576-0599 (the source data uses 0001-0575).
+-- =====================================================================
 
 USE mri_radiology_db;
 
@@ -101,28 +112,9 @@ SELECT * FROM patient WHERE patient_id = '0578';                        -- 0 row
 
 -- ---------------------------------------------------------------------
 -- A4. Safe design: procedure with an EXIT HANDLER
+--     (add_patient_with_report, created in 4_3_setup.sql)
 --     Any SQL error -> ROLLBACK of every step -> original error re-raised
 -- ---------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS add_patient_with_report;
-DELIMITER //
-CREATE PROCEDURE add_patient_with_report(
-    IN p_patient_id VARCHAR(10),
-    IN p_notes      LONGTEXT      -- LONGTEXT so an oversize note reaches the INSERT and fails there
-)
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;     -- undo every step of this transaction
-        RESIGNAL;     -- pass the original error back to the caller
-    END;
-
-    START TRANSACTION;
-        INSERT INTO patient (patient_id) VALUES (p_patient_id);
-        INSERT INTO radiology_report (patient_id, clinician_notes)
-        VALUES (p_patient_id, p_notes);
-    COMMIT;
-END //
-DELIMITER ;
 
 -- Fails at step 2: 70,000 characters exceed TEXT (65,535 bytes)
 CALL add_patient_with_report('0578', REPEAT('x', 70000));              -- EXPECTED ERROR 1406
@@ -208,46 +200,9 @@ ROLLBACK;                                                               -- a COM
 
 -- ---------------------------------------------------------------------
 -- B4. Safe design: procedure that validates and rolls back on any error
+--     (amend_report_and_study, created in 4_3_setup.sql)
 --                                                   (report: Test 3)
 -- ---------------------------------------------------------------------
-DROP PROCEDURE IF EXISTS amend_report_and_study;
-DELIMITER //
-CREATE PROCEDURE amend_report_and_study(
-    IN p_patient_id VARCHAR(10),
-    IN p_study_id   INT,
-    IN p_new_notes  LONGTEXT,
-    IN p_new_date   VARCHAR(20)     -- a string, so a bad date fails inside the UPDATE, not at CALL
-)
-BEGIN
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK;
-        RESIGNAL;
-    END;
-
-    START TRANSACTION;
-
-        -- consistency rule: the study must belong to this patient
-        IF NOT EXISTS (SELECT 1 FROM study
-                        WHERE study_id = p_study_id AND patient_id = p_patient_id) THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Study does not belong to this patient';
-        END IF;
-
-        -- step 1: amend the report
-        UPDATE radiology_report
-           SET clinician_notes = p_new_notes
-         WHERE patient_id = p_patient_id;
-
-        -- step 2: fix the study. study_name goes FIRST: MySQL applies SET left to right,
-        -- so DATE_FORMAT(study_date, ...) must still read the old date
-        UPDATE study
-           SET study_name = REPLACE(study_name, DATE_FORMAT(study_date, '%Y%m%d'), REPLACE(p_new_date, '-', '')),
-               study_date = p_new_date
-         WHERE study_id = p_study_id AND patient_id = p_patient_id;
-
-    COMMIT;
-END //
-DELIMITER ;
 
 -- Fails at step 2: 30 February is not a valid date (strict mode)
 CALL amend_report_and_study('0576', @sid, 'This text must NOT be saved', '2026-02-30');   -- EXPECTED ERROR 1292
@@ -267,5 +222,3 @@ CALL amend_report_and_study('0576', @sid,
 SELECT r.clinician_notes, s.study_name, s.study_date
   FROM radiology_report r JOIN study s ON s.patient_id = r.patient_id
  WHERE r.patient_id = '0576';                                           -- new notes, ..._20261012_..., 2026-10-12
-
-
